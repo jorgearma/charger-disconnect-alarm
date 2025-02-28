@@ -17,8 +17,7 @@ GMAIL_USER = os.getenv('GMAIL_USER')
 GMAIL_PASSWORD = os.getenv('GMAIL_PASSWORD')
 ALARM_SOUND = "alarm-26718.mp3"
 
-# Mensaje inicial
-print("🔒 Alarma anti-robo activada. Si desconectan la corriente, sonará la alarma.")
+print("\U0001F512 Alarma anti-robo activada. Si desconectan la corriente, sonará la alarma.")
 
 # Comando para evitar que el sistema entre en suspensión
 def prevent_sleep():
@@ -39,102 +38,74 @@ def check_battery_status():
 
 # Ejecutar la alarma en bucle
 def play_alarm():
-    if os.path.exists(ALARM_SOUND):  # Verificar si el archivo existe
+    if os.path.exists(ALARM_SOUND):
         subprocess.run(["mpv", "--no-terminal", "--volume=100", ALARM_SOUND])
     else:
         print(f"⚠️ El archivo de alarma '{ALARM_SOUND}' no se encuentra.")
 
-# Función para enviar correo usando Gmail
+# Enviar correo
 def send_email():
     try:
         subject = "⚠️ ¡Alarma! Cargador desconectado"
         body = "Se ha desconectado el cargador. La alarma se ha activado."
-        
-        # Crear el mensaje MIME
         message = MIMEMultipart()
         message["From"] = GMAIL_USER
         message["To"] = GMAIL_USER
-        message["Subject"] = Header(subject, 'utf-8')  # Codificación de UTF-8 en el asunto
+        message["Subject"] = Header(subject, 'utf-8')
         message.attach(MIMEText(body, "plain", "utf-8"))
-
-        # Configurar la conexión segura
         context = ssl.create_default_context()
-
-        # Conectar al servidor de Gmail
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
             server.login(GMAIL_USER, GMAIL_PASSWORD)
-            server.sendmail(GMAIL_USER, GMAIL_USER, message.as_string())  # Enviar correo a ti mismo
+            server.sendmail(GMAIL_USER, GMAIL_USER, message.as_string())
             print("Correo electrónico enviado a", GMAIL_USER)
-
-    except smtplib.SMTPException as e:
-        print(f"Error de SMTP al enviar correo: {e}")
     except Exception as e:
         print(f"Error al enviar correo: {e}")
 
-# Bloquear el volumen y deshabilitar las teclas de volumen
+# Bloquear el volumen
 def disable_volume_keys():
     try:
-        subprocess.run(["xmodmap", "-e", "keycode 122 = NoSymbol"])  # Desactiva bajar volumen
-        subprocess.run(["xmodmap", "-e", "keycode 123 = NoSymbol"])  # Desactiva subir volumen
-        subprocess.run(["xmodmap", "-e", "keycode 124 = NoSymbol"])  # Desactiva silenciar
+        subprocess.run(["xmodmap", "-e", "keycode 122 = NoSymbol"])
+        subprocess.run(["xmodmap", "-e", "keycode 123 = NoSymbol"])
+        subprocess.run(["xmodmap", "-e", "keycode 124 = NoSymbol"])
         print("Teclas de volumen desactivadas.")
     except Exception as e:
         print(f"Error al desactivar teclas de volumen: {e}")
 
-# Reactivar las teclas de volumen
+# Reactivar el volumen
 def enable_volume_keys():
     try:
-        subprocess.run(["xmodmap", "-e", "keycode 122 = XF86AudioLowerVolume"])  # Reactiva bajar volumen
-        subprocess.run(["xmodmap", "-e", "keycode 123 = XF86AudioRaiseVolume"])  # Reactiva subir volumen
-        subprocess.run(["xmodmap", "-e", "keycode 124 = XF86AudioMute"])         # Reactiva silenciar
+        subprocess.run(["xmodmap", "-e", "keycode 122 = XF86AudioLowerVolume"])
+        subprocess.run(["xmodmap", "-e", "keycode 123 = XF86AudioRaiseVolume"])
+        subprocess.run(["xmodmap", "-e", "keycode 124 = XF86AudioMute"])
         print("Teclas de volumen reactivadas.")
     except Exception as e:
         print(f"Error al reactivar teclas de volumen: {e}")
 
-# Deshabilitar los botones de apagado, suspensión y reinicio
-def disable_shutdown_suspend_restart():
+# Deshabilitar apagado desde GNOME
+def disable_gnome_power_options():
     try:
-        subprocess.run(['gsettings', 'set', 'org.gnome.desktop.lockdown', 'disable-power-off', 'false'], check=True)
-        subprocess.run(['gsettings', 'set', 'org.gnome.desktop.lockdown', 'disable-suspend', 'false'], check=True)
-        subprocess.run(['gsettings', 'set', 'org.gnome.desktop.lockdown', 'disable-restart', 'true'], check=True)
-        print("Botones de apagado, suspensión y reinicio deshabilitados.")
+        subprocess.run(["gsettings", "set", "org.gnome.desktop.session", "idle-delay", "0"], check=True)
+        subprocess.run(["gsettings", "set", "org.gnome.settings-daemon.plugins.power", "power-button-action", "nothing"], check=True)
+        print("Opciones de apagado en GNOME deshabilitadas.")
     except subprocess.CalledProcessError as e:
-        print(f"Error al deshabilitar botones: {e}")
+        print(f"Error al deshabilitar opciones de apagado en GNOME: {e}")
 
-# Reactivar los botones de apagado, suspensión y reinicio
-def enable_shutdown_suspend_restart():
-    try:
-        subprocess.run(['gsettings', 'set', 'org.gnome.desktop.lockdown', 'disable-power-off', 'true'], check=True)
-        subprocess.run(['gsettings', 'set', 'org.gnome.desktop.lockdown', 'disable-suspend', 'true'], check=True)
-        subprocess.run(['gsettings', 'set', 'org.gnome.desktop.lockdown', 'disable-restart', 'false'], check=True)
-        print("Botones de apagado, suspensión y reinicio reactivados.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error al reactivar botones: {e}")
-
-# Bloquear el volumen y deshabilitar las teclas de volumen
+# Aplicar restricciones
 disable_volume_keys()
-
-# Deshabilitar botones de apagado, suspensión y reinicio
-disable_shutdown_suspend_restart()
+disable_gnome_power_options()
 
 try:
     while True:
         plugged, battery_percentage = check_battery_status()
-
-        if not plugged:  # Si la batería está desconectada
+        if not plugged:
             print("⚠️  ¡Batería desconectada! Activando alarma...")
-            send_email()  # Enviar el correo
-            while not plugged:  # Reproducir la alarma hasta que se reconecte
+            send_email()
+            while not plugged:
                 play_alarm()
                 plugged, _ = check_battery_status()
             print("🔌 Batería reconectada. Alarma desactivada.")
-        
-        time.sleep(2)  # Revisar cada 2 segundos para evitar uso excesivo de CPU
+        time.sleep(2)
 except KeyboardInterrupt:
     print("\nScript interrumpido por el usuario.")
 finally:
-    # Reactivar las teclas de volumen al finalizar
     enable_volume_keys()
-
-    # Reactivar los botones de apagado, suspensión y reinicio
-    enable_shutdown_suspend_restart()
