@@ -39,7 +39,7 @@ This Python script is designed to prevent laptop theft when you are in a public 
 ## Usage
 Run the script with the following command:
 ```bash
-python alarma.py
+python alarma-cuputer-diconed.py
 ```
 Once activated, if someone disconnects the laptop charger:
 - The alarm sound will be triggered.
