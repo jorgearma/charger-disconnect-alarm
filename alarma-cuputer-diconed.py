@@ -19,11 +19,29 @@ ALARM_SOUND = "alarm-26718.mp3"
 
 print("\U0001F512 Alarma anti-robo activada. Si desconectan la corriente, sonará la alarma.")
 
-# Comando para evitar que el sistema entre en suspensión
-def prevent_sleep():
-    subprocess.run(["sudo", "systemctl", "mask", "sleep.target", "suspend.target", "hibernate.target", "hybrid-sleep.target"])
+def disable_volume_keys():
+    try:
+        subprocess.run(["xmodmap", "-e", "keycode 122 = NoSymbol"])
+        subprocess.run(["xmodmap", "-e", "keycode 123 = NoSymbol"])
 
-# Verificar el estado de la batería
+        subprocess.run(['sudo', 'systemctl', 'mask', 'poweroff.target'], check=True)
+        
+        print("Teclas de volumen desactivadas.")
+    except Exception as e:
+        print(f"Error al desactivar teclas de volumen: {e}")
+
+def enable_volume_keys():
+    try:
+        subprocess.run(["xmodmap", "-e", "keycode 122 = XF86AudioLowerVolume"])
+        subprocess.run(["xmodmap", "-e", "keycode 123 = XF86AudioRaiseVolume"])
+
+        subprocess.run(['sudo', 'systemctl', 'unmask', 'poweroff.target'], check=True)
+        
+        print("Teclas de volumen reactivadas.")
+    except Exception as e:
+        print(f"Error al reactivar teclas de volumen: {e}")
+
+
 def check_battery_status():
     try:
         battery = psutil.sensors_battery()
@@ -36,14 +54,14 @@ def check_battery_status():
         print(f"Error al verificar el estado de la batería: {e}")
         return False, None
 
-# Ejecutar la alarma en bucle
-def play_alarm():
+def play_alarm_nonblocking():
     if os.path.exists(ALARM_SOUND):
-        subprocess.run(["mpv", "--no-terminal", "--volume=100", ALARM_SOUND])
+        proc = subprocess.Popen(["mpv", "--no-terminal", "--volume=100", "--loop" , ALARM_SOUND])
+        return proc
     else:
         print(f"⚠️ El archivo de alarma '{ALARM_SOUND}' no se encuentra.")
+        return None
 
-# Enviar correo
 def send_email():
     try:
         subject = "⚠️ ¡Alarma! Cargador desconectado"
@@ -61,51 +79,29 @@ def send_email():
     except Exception as e:
         print(f"Error al enviar correo: {e}")
 
-# Bloquear el volumen
-def disable_volume_keys():
-    try:
-        subprocess.run(["xmodmap", "-e", "keycode 122 = NoSymbol"])
-        subprocess.run(["xmodmap", "-e", "keycode 123 = NoSymbol"])
-        subprocess.run(["xmodmap", "-e", "keycode 124 = NoSymbol"])
-        print("Teclas de volumen desactivadas.")
-    except Exception as e:
-        print(f"Error al desactivar teclas de volumen: {e}")
-
-# Reactivar el volumen
-def enable_volume_keys():
-    try:
-        subprocess.run(["xmodmap", "-e", "keycode 122 = XF86AudioLowerVolume"])
-        subprocess.run(["xmodmap", "-e", "keycode 123 = XF86AudioRaiseVolume"])
-        subprocess.run(["xmodmap", "-e", "keycode 124 = XF86AudioMute"])
-        print("Teclas de volumen reactivadas.")
-    except Exception as e:
-        print(f"Error al reactivar teclas de volumen: {e}")
-
-# Deshabilitar apagado desde GNOME
-def disable_gnome_power_options():
-    try:
-        subprocess.run(["gsettings", "set", "org.gnome.desktop.session", "idle-delay", "0"], check=True)
-        subprocess.run(["gsettings", "set", "org.gnome.settings-daemon.plugins.power", "power-button-action", "nothing"], check=True)
-        print("Opciones de apagado en GNOME deshabilitadas.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error al deshabilitar opciones de apagado en GNOME: {e}")
-
 # Aplicar restricciones
 disable_volume_keys()
-disable_gnome_power_options()
+
 
 try:
     while True:
         plugged, battery_percentage = check_battery_status()
         if not plugged:
-            print("⚠️  ¡Batería desconectada! Activando alarma...")
+            print("⚠️ ¡Batería desconectada! Activando alarma...")
             send_email()
+            alarm_process = play_alarm_nonblocking()
+            # Monitorear el estado de la batería mientras la alarma suena
             while not plugged:
-                play_alarm()
+                time.sleep(0.5)  # Verifica cada 0.5 segundos
                 plugged, _ = check_battery_status()
+                if plugged and alarm_process:
+                    alarm_process.terminate()  # Terminar la alarma
+                    alarm_process = None
+                    break
             print("🔌 Batería reconectada. Alarma desactivada.")
+            # Reactivar las teclas de volumen inmediatamente al reconectar el cargador
+            enable_volume_keys()
         time.sleep(2)
 except KeyboardInterrupt:
     print("\nScript interrumpido por el usuario.")
-finally:
     enable_volume_keys()
