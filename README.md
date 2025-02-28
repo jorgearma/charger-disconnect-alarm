@@ -1,17 +1,17 @@
-# Alarma Anti-Robo para Laptop
+# Anti-Theft Alarm for Laptop
 
-Este script en Python está diseñado para evitar el robo de tu laptop cuando te encuentras en un lugar público, como una biblioteca o cafetería, y necesitas alejarte momentáneamente. Funciona activando una alarma sonora y enviando un correo de alerta cuando se detecta que el cargador ha sido desconectado.
+This Python script is designed to prevent laptop theft when you are in a public place, such as a library or café, and need to step away momentarily. It works by activating a loud alarm and sending an alert email when it detects that the charger has been unplugged.
 
-## Características
-- Detecta la desconexión del cargador de la laptop.
-- Reproduce una alarma sonora hasta que el cargador sea reconectado.
-- Envía una notificación por correo electrónico.
-- Deshabilita las teclas de volumen para evitar que el ladrón silencie la alarma.
-- Desactiva las opciones de apagado, suspensión y reinicio del sistema.
+## Features
+- Detects laptop charger disconnection.
+- Plays a loud alarm sound until the charger is reconnected.
+- Sends a notification email.
+- Disables volume keys to prevent the thief from silencing the alarm.
+- Disables shutdown, sleep, and restart options.
 
-## Requisitos
+## Requirements
 - Python 3
-- Librerías requeridas:
+- Required libraries:
   - `smtplib`
   - `ssl`
   - `time`
@@ -20,39 +20,42 @@ Este script en Python está diseñado para evitar el robo de tu laptop cuando te
   - `os`
   - `email`
   - `dotenv`
-- Cliente de correo Gmail (se requieren credenciales configuradas en un archivo `.env`).
-- `mpv` instalado para reproducir el sonido de alarma.
+- Gmail client (credentials must be set up in a `.env` file).
+- `mpv` installed to play the alarm sound.
 
-## Instalación
-1. Clona este repositorio o descarga el archivo.
-2. Instala las dependencias necesarias ejecutando:
+## Installation
+1. Clone this repository or download the file.
+2. Install the necessary dependencies by running:
    ```bash
    pip install psutil python-dotenv
    ```
-3. Crea un archivo `.env` en el mismo directorio y añade las credenciales de tu cuenta de Gmail:
+3. Create a `.env` file in the same directory and add your Gmail account credentials:
    ```env
-   GMAIL_USER=tu_correo@gmail.com
-   GMAIL_PASSWORD=tu_contraseña
+   GMAIL_USER=your_email@gmail.com
+   GMAIL_PASSWORD=your_password
    ```
-4. Asegúrate de tener un archivo de audio de alarma en el mismo directorio con el nombre `alarm-26718.mp3` o modifica el script para usar otro sonido.
+4. Make sure you have an alarm audio file in the same directory named `alarm-26718.mp3` or modify the script to use a different sound.
 
-## Uso
-Ejecuta el script con el siguiente comando:
+## Usage
+Run the script with the following command:
 ```bash
 python alarma.py
 ```
-Una vez activado, si alguien desconecta el cargador de la laptop:
-- Se activará la alarma sonora.
-- Se enviará una notificación por correo.
-- El sistema bloqueará las teclas de volumen y deshabilitará los botones de apagado, suspensión y reinicio.
+Once activated, if someone disconnects the laptop charger:
+- The alarm sound will be triggered.
+- A notification email will be sent.
+- The system will lock volume keys and disable shutdown, sleep, and restart buttons.
 
-Para detener el script, presiona `Ctrl + C`.
+To stop the script, press `Ctrl + C`.
 
-## Notas
-- Para evitar que el sistema entre en suspensión, el script ejecuta un comando para deshabilitar la suspensión automática.
-- Asegúrate de probar el script antes de usarlo en público.
-- Puede ser necesario ejecutar el script con permisos de administrador en algunos sistemas.
+## Notes
+- To prevent the system from going into sleep mode, the script runs a command to disable automatic suspension.
+- Make sure to test the script before using it in public.
+- Running the script with administrator privileges may be required on some systems.
+- The physical power button (forced shutdown) remains active.
+- For greater effectiveness, run the script in the background in a minimized shell; an average thief will not know how to disable it.
+- Before running the script, increase the volume to the maximum level to ensure the alarm is as loud as possible.
 
-## Licencia
-Este proyecto es de código abierto y se distribuye bajo la licencia MIT.
+## License
+This project is open-source and distributed under the MIT license.
 
