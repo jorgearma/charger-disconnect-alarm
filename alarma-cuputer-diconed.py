@@ -25,7 +25,10 @@ def disable_volume_keys():
         subprocess.run(["xmodmap", "-e", "keycode 123 = NoSymbol"])
 
         subprocess.run(['sudo', 'systemctl', 'mask', 'poweroff.target'], check=True)
-        
+        subprocess.run(['sudo', 'systemctl', 'mask', 'suspend.target'], check=True)
+        subprocess.run(['sudo', 'systemctl', 'mask', 'reboot.target'], check=True)
+
+
         print("Teclas de volumen desactivadas.")
     except Exception as e:
         print(f"Error al desactivar teclas de volumen: {e}")
@@ -35,6 +38,8 @@ def enable_volume_keys():
         subprocess.run(["xmodmap", "-e", "keycode 122 = XF86AudioLowerVolume"])
         subprocess.run(["xmodmap", "-e", "keycode 123 = XF86AudioRaiseVolume"])
 
+        subprocess.run(['sudo', 'systemctl', 'unmask', 'suspend.target'], check=True)
+        subprocess.run(['sudo', 'systemctl', 'unmask', 'reboot.target'], check=True)
         subprocess.run(['sudo', 'systemctl', 'unmask', 'poweroff.target'], check=True)
         
         print("Teclas de volumen reactivadas.")
