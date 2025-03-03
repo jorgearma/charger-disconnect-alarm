@@ -28,6 +28,8 @@ def disable_volume_keys():
         subprocess.run(['sudo', 'systemctl', 'mask', 'suspend.target'], check=True)
         subprocess.run(['sudo', 'systemctl', 'mask', 'reboot.target'], check=True)
 
+        subprocess.run(["xset", "s", "off"])
+
 
         print("Teclas de volumen desactivadas.")
     except Exception as e:
@@ -41,6 +43,10 @@ def enable_volume_keys():
         subprocess.run(['sudo', 'systemctl', 'unmask', 'suspend.target'], check=True)
         subprocess.run(['sudo', 'systemctl', 'unmask', 'reboot.target'], check=True)
         subprocess.run(['sudo', 'systemctl', 'unmask', 'poweroff.target'], check=True)
+
+        subprocess.run(["xset", "s", "on"])
+        
+
         
         print("Teclas de volumen reactivadas.")
     except Exception as e:
